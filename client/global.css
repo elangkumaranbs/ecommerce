@@ -142,4 +142,37 @@
   .animate-scroll {
     animation: scroll 15s linear infinite;
   }
+
+  /* Mobile Menu Styles */
+  /* Smooth transitions for mobile menu */
+  .mobile-menu-enter {
+    transform: translateX(-100%);
+  }
+  
+  .mobile-menu-enter-active {
+    transform: translateX(0);
+    transition: transform 300ms ease-in-out;
+  }
+  
+  .mobile-menu-exit {
+    transform: translateX(0);
+  }
+  
+  .mobile-menu-exit-active {
+    transform: translateX(-100%);
+    transition: transform 300ms ease-in-out;
+  }
+  
+  /* Improved touch targets for mobile */
+  @media (max-width: 768px) {
+    .touch-target {
+      min-height: 44px;
+      min-width: 44px;
+    }
+  }
+  
+  /* Prevent horizontal scrolling on mobile when menu is open */
+  .mobile-menu-open {
+    overflow-x: hidden;
+  }
 }

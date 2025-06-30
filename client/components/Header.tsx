@@ -36,6 +36,20 @@ export default function Header({
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const userDropdownRef = useRef<HTMLDivElement>(null);
 
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isMobileMenuOpen]);
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -44,9 +58,20 @@ export default function Header({
       }
     };
 
+    const handleEscapeKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsMobileMenuOpen(false);
+        setShowUserDropdown(false);
+        setIsSearchOpen(false);
+      }
+    };
+
     document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscapeKey);
+    
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscapeKey);
     };
   }, []);
 
@@ -205,32 +230,49 @@ export default function Header({
   ];
 
   return (
-    <header className="bg-white w-full border-b border-gray-100">
-      <div className="max-w-[1320px] mx-auto px-[30px] py-6">
-        <div className="flex items-center">
+    <header className="bg-white w-full border-b border-gray-100 sticky top-0 z-40">
+      <div className="max-w-[1320px] mx-auto px-4 sm:px-6 lg:px-[30px] py-4 lg:py-6">
+        <div className="flex items-center justify-between">
           {/* Mobile Hamburger Menu */}
-          <div className="md:hidden">
+          <div className="md:hidden mr-4">
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="p-2 hover:text-[#7C3AED] transition-colors"
+              className="p-2 hover:text-[#7C3AED] hover:bg-gray-100 rounded-lg transition-colors relative z-50"
+              aria-label="Toggle mobile menu"
             >
-              <Menu className="w-6 h-6" />
+              <div className="w-6 h-6 relative">
+                <span 
+                  className={`absolute block w-6 h-0.5 bg-current transform transition-all duration-300 ${
+                    isMobileMenuOpen ? 'rotate-45 top-3' : 'top-1'
+                  }`}
+                />
+                <span 
+                  className={`absolute block w-6 h-0.5 bg-current transform transition-all duration-300 top-3 ${
+                    isMobileMenuOpen ? 'opacity-0' : 'opacity-100'
+                  }`}
+                />
+                <span 
+                  className={`absolute block w-6 h-0.5 bg-current transform transition-all duration-300 ${
+                    isMobileMenuOpen ? '-rotate-45 top-3' : 'top-5'
+                  }`}
+                />
+              </div>
             </button>
           </div>
 
           {/* Logo */}
           <div className="flex-1 md:flex-none">
             <Link to="/" className="flex items-center">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 sm:gap-3">
                 {/* Placeholder logo - replace with your logo when ready */}
-                <div className="w-12 h-12 bg-gradient-to-br from-pink-500 to-purple-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-xl">FS</span>
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-pink-500 to-purple-600 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold text-lg sm:text-xl">FS</span>
                 </div>
                 <div className="hidden sm:block">
-                  <h1 className="text-2xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
+                  <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
                     FashionStore
                   </h1>
-                  <p className="text-sm text-gray-500 -mt-1">Premium Fashion</p>
+                  <p className="text-xs sm:text-sm text-gray-500 -mt-1">Premium Fashion</p>
                 </div>
               </div>
             </Link>
@@ -336,13 +378,14 @@ export default function Header({
           </nav>
 
           {/* Right side icons */}
-          <div className="flex items-center justify-end flex-1 md:flex-none">
-            <div className="flex items-center space-x-[20px]">
+          <div className="flex items-center justify-end">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               <button
                 onClick={() => setIsSearchOpen(true)}
-                className="p-[5px] hover:text-[#7C3AED] transition-colors"
+                className="p-2 hover:text-[#7C3AED] hover:bg-gray-100 rounded-lg transition-colors"
+                aria-label="Search"
               >
-                <Search className="w-[17px] h-[17px]" />
+                <Search className="w-5 h-5" />
               </button>
               
               {/* User Account Button */}
@@ -351,13 +394,14 @@ export default function Header({
                   <div className="relative">
                     <button 
                       onClick={() => setShowUserDropdown(!showUserDropdown)}
-                      className="p-[5px] hover:text-[#7C3AED] transition-colors flex items-center space-x-2"
+                      className="p-2 hover:text-[#7C3AED] hover:bg-gray-100 rounded-lg transition-colors flex items-center space-x-1 sm:space-x-2"
+                      aria-label="User account"
                     >
-                      <User className="w-[17px] h-[17px]" />
-                      <span className="hidden md:block text-sm text-gray-700">
+                      <User className="w-5 h-5" />
+                      <span className="hidden lg:block text-sm text-gray-700 max-w-20 truncate">
                         {user.user_metadata?.first_name || user.email?.split('@')[0]}
                       </span>
-                      <ChevronDown className={`w-3 h-3 text-gray-500 transition-transform duration-200 ${showUserDropdown ? 'rotate-180' : ''}`} />
+                      <ChevronDown className={`w-3 h-3 text-gray-500 transition-transform duration-200 hidden sm:block ${showUserDropdown ? 'rotate-180' : ''}`} />
                     </button>
                     
                     {/* User Dropdown */}
@@ -461,16 +505,17 @@ export default function Header({
                 )}
               </div>
               
-              <div className="pl-[10px]">
+              <div className="ml-2 sm:ml-4">
                 <Link
                   to="/cart"
                   onClick={onCartClick || onCartToggle}
-                  className="p-[3px] hover:text-[#7C3AED] transition-colors relative block"
+                  className="p-2 hover:text-[#7C3AED] hover:bg-gray-100 rounded-lg transition-colors relative block"
+                  aria-label={`Cart (${totalCartCount} items)`}
                 >
-                  <ShoppingCart className="w-[21px] h-[17px]" />
+                  <ShoppingCart className="w-5 h-5" />
                   {totalCartCount > 0 && (
-                    <div className="absolute -top-[6px] -right-[10px] bg-[#DD3327] text-white text-[10px] w-[18px] h-[18px] rounded-[9px] flex items-center justify-center leading-[10px]">
-                      {totalCartCount}
+                    <div className="absolute -top-1 -right-1 bg-[#DD3327] text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-medium min-w-[20px]">
+                      {totalCartCount > 99 ? '99+' : totalCartCount}
                     </div>
                   )}
                 </Link>
@@ -481,15 +526,80 @@ export default function Header({
 
         {/* Mobile Menu Dropdown */}
         {isMobileMenuOpen && (
-          <div className="md:hidden absolute left-0 right-0 top-full bg-white border-t border-gray-200 z-50">
-            <nav className="px-4 py-2">
-              <ul className="space-y-1">
+          <>
+            {/* Overlay */}
+            <div 
+              className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+            
+            {/* Mobile Sidebar */}
+            <div className="fixed top-0 left-0 h-full w-80 max-w-[85vw] bg-white border-r border-gray-200 z-50 md:hidden transform transition-transform duration-300 ease-in-out overflow-y-auto shadow-2xl">
+              {/* Sidebar Header */}
+              <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gradient-to-r from-pink-50 to-purple-50">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-gradient-to-br from-pink-500 to-purple-600 rounded-lg flex items-center justify-center">
+                    <span className="text-white font-bold text-sm">FS</span>
+                  </div>
+                  <h2 className="text-lg font-semibold text-gray-900">Menu</h2>
+                </div>
+                <button
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="p-2 rounded-md hover:bg-white/50 transition-colors"
+                  aria-label="Close menu"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <nav className="p-4">
+                {/* User section in mobile menu */}
+                {user && (
+                  <div className="mb-6 p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-100">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                        <User className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          {user.user_metadata?.first_name && user.user_metadata?.last_name 
+                            ? `${user.user_metadata.first_name} ${user.user_metadata.last_name}`
+                            : user.email?.split('@')[0]
+                          }
+                        </p>
+                        <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                      </div>
+                    </div>
+                    
+                    {/* Quick user actions */}
+                    <div className="mt-3 flex gap-2">
+                      <Link
+                        to="/profile"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="flex-1 text-center py-2 px-3 text-xs bg-white text-purple-600 rounded-md border border-purple-200 hover:bg-purple-50 transition-colors"
+                      >
+                        Profile
+                      </Link>
+                      <Link
+                        to="/orders"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="flex-1 text-center py-2 px-3 text-xs bg-white text-purple-600 rounded-md border border-purple-200 hover:bg-purple-50 transition-colors"
+                      >
+                        Orders
+                      </Link>
+                    </div>
+                  </div>
+                )}
+                
+                <ul className="space-y-2">
                 {navigationItems.map((item, index) => (
                   <li key={index}>
                     <div>
                       {item.hasDropdown ? (
                         <button
-                          className="flex items-center justify-between w-full py-3 text-[#111] font-medium text-[15px] hover:text-[#7C3AED] transition-colors border-b border-gray-100"
+                          className="flex items-center justify-between w-full py-3 px-3 text-[#111] font-medium text-[15px] hover:text-[#7C3AED] hover:bg-gray-50 transition-colors rounded-lg border-b border-gray-100"
                           onClick={() => {
                             setActiveDropdown(
                               activeDropdown === item.name ? null : item.name,
@@ -523,7 +633,7 @@ export default function Header({
                       ) : (
                         <Link
                           to={item.link || `/products/${item.name.toLowerCase()}`}
-                          className="flex items-center justify-between w-full py-3 text-[#111] font-medium text-[15px] hover:text-[#7C3AED] transition-colors border-b border-gray-100"
+                          className="flex items-center justify-between w-full py-3 px-3 text-[#111] font-medium text-[15px] hover:text-[#7C3AED] hover:bg-gray-50 transition-colors rounded-lg border-b border-gray-100"
                           onClick={() => setIsMobileMenuOpen(false)}
                         >
                           <span className="relative">
@@ -541,7 +651,7 @@ export default function Header({
                       {item.hasDropdown &&
                         item.items &&
                         activeDropdown === item.name && (
-                          <div className="pl-4 py-2 bg-gray-50">
+                          <div className="pl-4 py-2 bg-gray-50 rounded-lg ml-3 mt-2">
                             {item.items.map((mainCategory: any, mainIndex: number) => {
                               const getCategoryUrl = (categoryName: string, parentCategory?: string) => {
                                 let categorySlug = categoryName.toLowerCase()
@@ -600,6 +710,7 @@ export default function Header({
               </ul>
             </nav>
           </div>
+        </>
         )}
       </div>
 
